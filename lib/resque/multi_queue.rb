@@ -49,6 +49,7 @@ module Resque
         synchronize do
           value = @redis.blpop(queue_names, {:timeout => 1}) until value
           queue_name, payload = value
+          queue_name = "#{@redis.namespace}:#{queue_name}" if @redis.is_a?(Redis::Namespace)
           queue = @queue_hash[queue_name]
           [queue, queue.decode(payload)]
         end
@@ -64,6 +65,7 @@ module Resque
       queue_name, payload = @redis.blpop(queue_names, {:timeout => timeout})
       return unless payload
 
+      queue_name = "#{@redis.namespace}:#{queue_name}" if @redis.is_a?(Redis::Namespace)
       synchronize do
         queue = @queue_hash[queue_name]
         [queue, queue.decode(payload)]
